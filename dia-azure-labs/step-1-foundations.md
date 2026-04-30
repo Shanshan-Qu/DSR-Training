@@ -43,6 +43,25 @@ For Rosetta:
 
 ---
 
+## 🧩 Storage account naming convention
+
+When you look at production resources you'll encounter names like `stanlnznfileprdrosi01`. They follow a deliberate pattern — decode it once and every name becomes self-explanatory:
+
+```
+st  an  lnzn  file  prd  rosi  01
+│   │    │     │     │    │    └── sequence number
+│   │    │     │     │    └─────── workload  (rosi = Rosetta, wod = Web of Documents)
+│   │    │     │     └──────────── environment (prd / uat / dev)
+│   │    │     └────────────────── service type (file = Azure Files, blob = Blob)
+│   │    └──────────────────────── region token (lnzn = Australia/NZ North)
+│   └───────────────────────────── team/org prefix (an = Archives NZ / ANL)
+└───────────────────────────────── resource type prefix (st = storage account)
+```
+
+The lab account `stdialabsXXXX` uses a simplified pattern (`st` + `dia` + `labs` + random suffix). The `XXXX` suffix is added by the deployment script to guarantee global uniqueness.
+
+---
+
 ## ⌨️ Activity 1: Map your way around the portal
 
 1. Open **portal.azure.com**.
