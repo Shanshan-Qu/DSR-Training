@@ -82,6 +82,55 @@ Tip: `RequesterObjectId` is the Azure AD user/SP **object ID**. Resolve it to a 
 
 ---
 
+## 📚 Must-know query #3b — "Ransomware early warning — mass delete spike"
+
+A sudden burst of blob deletes across a storage account is the earliest Azure-visible signal of a ransomware attack. This query builds a per-15-minute count you can alert on.
+
+```kql
+StorageBlobLogs
+| where TimeGenerated > ago(4h)
+| where OperationName == "DeleteBlob"
+| summarize DeleteCount = count() by bin(TimeGenerated, 15m), AccountName
+| order by TimeGenerated desc
+```
+
+Run as a time-chart (`| render timechart`) to see the shape. In production, set an **alert rule** with threshold `DeleteCount > 50` in any 15-minute window — that's the trip wire.
+
+---
+
+## 📚 Must-know query #3c — "Storage capacity trend (last 7 days)"
+
+Useful for forecasting storage growth and spotting unexpected data accumulation.
+
+```kql
+AzureMetrics
+| where TimeGenerated > ago(7d)
+| where ResourceProvider == "MICROSOFT.STORAGE"
+| where MetricName == "UsedCapacity"
+| summarize AvgCapacityGB = avg(Average) / 1073741824 by bin(TimeGenerated, 1d), Resource
+| order by TimeGenerated asc
+| render timechart
+```
+
+> [!TIP]
+> In production, run this across all three Rosetta storage accounts to get a combined capacity trend. Pin the chart to the `Preservation Operations` dashboard — it answers "are we growing as expected?"
+
+---
+
+## 📚 Must-know query #3d — "Backup job failures"
+
+```kql
+AddonAzureBackupJobs
+| where TimeGenerated > ago(7d)
+| where JobStatus == "Failed" or JobStatus == "CompletedWithWarnings"
+| project TimeGenerated, ResourceId, JobOperation, JobStatus, JobFailureCode, BackupItemUniqueId
+| order by TimeGenerated desc
+```
+
+If this returns rows, something in the backup schedule needs attention. In production, also set an alert rule against this query so the on-call team is notified without having to run it manually.
+
+---
+
 ## 📚 Must-know query #4 — "What changed in the subscription?"
 
 ```kql
@@ -126,8 +175,14 @@ We'll save these so the team can reuse them.
 
 1. In the Logs blade, click **Save → Save as query**.
 2. Name: `01 - Heartbeat health`. Category: `DIA Preservation`. Save type: **Query**.
-3. Repeat for the other four. Use prefix numbering (`02 - Top CPU…`, `03 - Blob deletes…`) so they sort sensibly.
-4. Click **Queries** in the toolbar → filter by category → confirm all five appear.
+3. Repeat for the other queries. Use prefix numbering so they sort sensibly:
+   - `02 - Top CPU offenders`
+   - `03 - Blob deletes (who)`
+   - `03b - Blob delete spike (ransomware)`
+   - `03c - Storage capacity trend`
+   - `03d - Backup job failures`
+   - `04 - Subscription changes`
+4. Click **Queries** in the toolbar → filter by category → confirm all appear.
 
 > [!TIP]
 > Saved queries live in the workspace, not on your account. Anyone with read access to the workspace sees them — exactly what you want for shared on-call.
@@ -161,8 +216,11 @@ Save it to your query pack as `04 - Top blob uploaders`.
 
 ## ✅ Success checklist
 
-- [ ] All 5 must-know queries return results (or zero results, where that's correct)
-- [ ] All 5 are saved to your workspace under category `DIA Preservation`
+- [ ] All must-know queries return results (or zero results, where that's correct)
+- [ ] All queries are saved to your workspace under category `DIA Preservation`
+- [ ] The ransomware spike query (`03b`) is saved and you understand what threshold you'd alert on
+- [ ] The storage capacity trend query (`03c`) is pinned as a chart to your `Preservation Operations` dashboard
+- [ ] The backup failure query (`03d`) returns zero rows (meaning no backup failures in the lab)
 - [ ] You've created a dashboard `Preservation Operations` with at least 2 pinned tiles
 - [ ] You've written and saved your own "top uploaders" query
 

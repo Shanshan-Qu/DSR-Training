@@ -10,10 +10,13 @@ _Money in, money out._ 💰 The team's existing tier-management script already h
 
 ## 🧭 What you'll learn
 
-- How to build a Cost analysis view that **forecasts** your next month's spend
+- How to build a Cost analysis view that **forecasts** your next month's spend — including storage-specific filtering
 - How to set a **budget** with multi-threshold alerts (50% / 80% / 100%)
-- When to use a **Reservation** vs. a **Savings Plan** vs. on-demand pricing
+- When to use a **Reservation** vs. a **Savings Plan** vs. on-demand pricing (for VMs)
 - How to schedule a **cost export** for monthly reporting
+
+> [!IMPORTANT]
+> **How DIA manages storage tiers:** At DIA, movement of Blob data between Hot, Cool, and Cold tiers is managed automatically by **Azure Lifecycle Management policies and platform scripts** — you do not manually move data between tiers. The lifecycle policies are defined in Terraform by DIA Core Support and deploy to all Rosetta storage accounts. This lab includes a lifecycle activity (Step 5) so you understand what the policies do, but you should not add or change lifecycle rules on production accounts without a change request. The focus in this step is on **reading and forecasting costs**, not on optimising tier placement.
 
 ---
 
@@ -52,6 +55,22 @@ Both are pre-commitments that buy you a discount on compute. The differences mat
 
 ---
 
+## ⌨️ Activity 1b: Storage growth forecast
+
+Forecast storage costs specifically — filtering out compute noise:
+
+1. Cost Management → **Cost analysis → + New → Customize**.
+2. Granularity: **Daily**.
+3. Group by: **Resource**.
+4. Filter: `Resource type = Microsoft.Storage/storageAccounts`.
+5. Date range: **Last 3 months + Forecast**.
+6. Save view as **DIA Lab — storage growth forecast**.
+7. Pin to the `Preservation Operations` dashboard.
+
+This view answers: "How fast is storage spend growing, and what does it look like next quarter?" In production, use this to validate that lifecycle policies are actually reducing costs as blobs age out of Hot tier.
+
+---
+
 ## ⌨️ Activity 2: Create a budget with three alert thresholds
 
 1. Cost Management → **Budgets → + Add**.
@@ -70,6 +89,9 @@ Both are pre-commitments that buy you a discount on compute. The differences mat
 ---
 
 ## ⌨️ Activity 3: Look at Reservation / Savings Plan recommendations
+
+> [!NOTE]
+> **Scope:** Reservations and Savings Plans apply to **compute (VMs)** at DIA — not storage. Storage costs are optimised by the automated lifecycle policies described above. This activity is relevant for the Rosetta primary VMs (which run 24x7 on a known SKU and are strong Reservation candidates).
 
 1. Cost Management → **Reservations → Add → Browse all products**.
 2. Pick **Virtual Machines**, region **Australia East**, your VM family.
@@ -114,8 +136,10 @@ Save it as **By owner — month to date**.
 ## ✅ Success checklist
 
 - [ ] `DIA Lab — daily with forecast` view exists, pinned to your dashboard
+- [ ] `DIA Lab — storage growth forecast` view exists (filtered to storage accounts), pinned to your dashboard
+- [ ] You can explain why storage tier management at DIA is automated and not done manually
 - [ ] Budget `bud-rg-dia-azure-labs-monthly` exists with three alert thresholds
-- [ ] You've located (not bought) the Reservation and Savings Plan recommendation pages
+- [ ] You've located (not bought) the Reservation and Savings Plan recommendation pages and understand they apply to VMs, not storage
 - [ ] A daily cost export is scheduled to `cost-exports/`
 - [ ] You've built and saved a **By owner** cost view
 
