@@ -35,6 +35,7 @@ Format inspired by the [GitHub Skills](https://github.com/skills/customize-your-
 | **7** | [Backup & Recovery Services vault](./step-7-backup.md) | 60 min | Module 7 |
 | **8** | [Guardrails & Governance](./step-8-governance.md) | 90 min | Module 8 |
 | **9** | [Azure portal foundations](./step-9-portal.md) | 60 min | Module 9 |
+| **10** | [Nonprod environment review](./step-10-nonprod-review.md) | 90 min | Module 10 |
 
 ---
 
@@ -74,6 +75,9 @@ This session directly addresses the team's three governance responsibilities: un
 ### Step 9 — Azure portal foundations
 A short, practical session that turns the portal from "a place you click around in" into a personalised operations console. You'll build a shared "Preservation Operations" dashboard, learn to use Resource Graph Explorer to query resources across multiple subscriptions, and set up portal favourites so the services you use daily are always one click away. You'll also learn how to use Cloud Shell as a built-in terminal without needing to install anything on your laptop.
 
+### Step 10 — Nonprod environment review
+The vendor has finished deploying the DSR nonprod environment. This session is a structured walkthrough of what was actually built — confirming the design is correctly implemented before the team takes operational ownership. You'll work through five layers (networking, storage, monitoring, data protection, governance) using a formal handover checklist, and produce a one-page sign-off report. A demo environment script (`assets/deploy-demo-env.ps1`) is provided so you can practice the review technique against a safe replica before touching the real nonprod environment.
+
 ---
 
 ## 🚀 How to start
@@ -100,8 +104,10 @@ dia-azure-labs/
 ├── step-7-backup.md
 ├── step-8-governance.md
 ├── step-9-portal.md
+├── step-10-nonprod-review.md       ← vendor handover checklist
 └── assets/
-    ├── deploy-lab.ps1              ← PowerShell lab deployment
+    ├── deploy-lab.ps1              ← PowerShell lab deployment (generic training lab)
+    ├── deploy-demo-env.ps1         ← PowerShell demo env (mirrors Rosetta nonprod design)
     └── kql-cheatsheet.md           ← must-know KQL one-pager
 ```
 
