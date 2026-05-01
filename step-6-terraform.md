@@ -31,6 +31,84 @@ In a single module you may see both: AzureRM for the storage account, AzAPI for 
 
 ---
 
+## 🧩 How the DIA IaC workflow actually works
+
+The DSR landing zone uses **Azure DevOps Repos + Terraform Cloud** to manage all infrastructure as code. Here is what happens end-to-end every time a change is made:
+
+```
+ 1. ENGINEER makes a change
+    └── edits .tf files in a working branch
+    └── commits + pushes to Azure DevOps Repo
+    └── opens a Pull Request (PR)
+
+ 2. PR OPEN → SPECULATIVE PLAN triggered automatically
+    └── Terraform Cloud reads the PR branch code
+    └── runs `terraform plan` (read-only, no changes applied)
+    └── posts a “plan summary” back to the PR thread:
+       └── Example: “Plan: 2 to add, 0 to change, 0 to destroy”
+    └── reviewers read the plan diff before approving
+
+ 3. PR APPROVED + MERGED to main branch
+    └── triggers a FULL Plan + Apply run in Terraform Cloud
+    └── this is the only branch that deploys
+    └── Terraform Cloud runs against the correct WORKSPACE:
+       └── workspace-dev   → dev subscription
+       └── workspace-uat   → uat subscription
+       └── workspace-prod  → prod subscription
+
+ 4. APPLY needs a human approval in the Terraform Cloud portal
+    └── the output shows EXACTLY what will change
+    └── a second person reviews and clicks “Approve”
+    └── Terraform applies changes using the DevOps Service Connection
+       (Contributor on that environment’s subscription only)
+
+ 5. STATE FILE updated
+    └── stored in Azure Storage (blob lease = state lock)
+    └── lock prevents two simultaneous applies
+    └── no engineer ever edits this file by hand
+
+ 6. ENVIRONMENT PROMOTION (Dev → UAT → Prod)
+    └── same Terraform code, different workspace variables
+    └── promotion is a separate PR targeting that env’s workspace
+    └── ensures identical config across environments
+```
+
+> [!IMPORTANT]
+> **As the Digital Preservation Team you are a _consumer_ and _reviewer_ of this pipeline, not the author.** Your role is:
+> - Read plan output on a PR and flag anything that looks wrong (especially `destroy` lines on preservation storage)
+> - Raise change requests to Core Support for infrastructure changes
+> - Understand what changed _after_ an apply (read the apply log)
+>
+> The Dev environment allows manual resource creation for experimentation. **Test and Production only accept changes via the DevOps pipeline** — a policy blocks portal-only writes.
+
+### Workspace–environment mapping
+
+| Terraform Cloud workspace | Azure subscription | Who can approve an apply |
+|---|---|---|
+| `workspace-dev` | `sub-dia-dsr-dev` | Core Support + DPS team lead |
+| `workspace-uat` | `sub-dia-dsr-uat` | Core Support only |
+| `workspace-prod` | `sub-dia-dsr-prd` | Core Support only (Change Advisory Board approval also required) |
+
+### What a speculative plan comment looks like on a PR
+
+```
+Terraform Cloud | workspace-dev
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
++ azurerm_storage_container.backup_test
+  + container_access_type = "private"
+  + name                  = "backup-test"
+  + storage_account_name  = "stanlnznblobdevwod01"
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+A plan comment showing `X to destroy` on a preservation storage account should **immediately** stop the review — escalate to Core Support before approving.
+
+---
+
 ## ⌨️ Activity 1: Set up Terraform locally
 
 You can do this in Cloud Shell (Terraform is pre-installed) or locally.
