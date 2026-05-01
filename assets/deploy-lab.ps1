@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Deploys the DIA Azure training lab environment.
+    Deploys the DIA Azure training lab environment (no VMs).
 
 .DESCRIPTION
     Creates a self-contained training lab in your Azure subscription:
@@ -8,8 +8,10 @@
       - Log Analytics workspace + Application Insights
       - Storage account with two containers (rosetta-objects, rosetta-manifests)
       - Recovery Services vault
-      - One RHEL 9 VM (vm-rhel-lab) and one Windows Server 2022 VM (vm-win-lab)
-      - Azure Monitor Agent on both VMs, sending telemetry to the workspace
+
+    VMs are NOT created by this script. If you want VMs (for Step 2 AMA / heartbeat
+    activities or for the optional Backup lab), run 'deploy-vms.ps1' as a separate
+    step. See 'step-optional-vm-setup.md' for full instructions.
 
     Uses your existing Azure CLI / PowerShell login. Does not change subscription
     defaults outside the run.
@@ -23,23 +25,16 @@
 .PARAMETER Location
     Azure region. Default: australiaeast.
 
-.PARAMETER VmAdminUser
-    Local admin username for both lab VMs. Default: diaadmin.
-
-.PARAMETER VmAdminPassword
-    Local admin password (SecureString). Required unless -Cleanup.
-
 .PARAMETER Cleanup
-    Switch. Deletes the lab resource group and everything in it. No deploy.
+    Switch. Deletes the lab resource group and everything in it (including any VMs
+    deployed by deploy-vms.ps1). No deploy.
 
 .EXAMPLE
-    # Deploy
-    $pw = Read-Host -AsSecureString "Lab VM admin password"
-    ./deploy-lab.ps1 -SubscriptionId 00000000-0000-0000-0000-000000000000 `
-                     -VmAdminPassword $pw
+    # Deploy the core lab (no VMs)
+    ./deploy-lab.ps1 -SubscriptionId 00000000-0000-0000-0000-000000000000
 
 .EXAMPLE
-    # Clean up
+    # Clean up everything in the lab RG (storage, LAW, vault, AND VMs if any)
     ./deploy-lab.ps1 -SubscriptionId 00000000-0000-0000-0000-000000000000 -Cleanup
 
 .NOTES
@@ -55,9 +50,6 @@ param(
 
     [string]$ResourceGroup = "rg-dia-azure-labs",
     [string]$Location      = "australiaeast",
-    [string]$VmAdminUser   = "diaadmin",
-
-    [SecureString]$VmAdminPassword,
 
     [switch]$Cleanup
 )
@@ -69,7 +61,7 @@ Set-StrictMode -Version Latest
 # Module check
 #--------------------------------------------------------------------
 $required = @('Az.Accounts','Az.Resources','Az.Storage','Az.OperationalInsights',
-              'Az.ApplicationInsights','Az.RecoveryServices','Az.Compute','Az.Monitor')
+              'Az.ApplicationInsights','Az.RecoveryServices')
 foreach ($m in $required) {
     if (-not (Get-Module -ListAvailable -Name $m)) {
         throw "Required module '$m' is missing. Install with: Install-Module $m -Scope CurrentUser"
@@ -91,7 +83,7 @@ Write-Host "Subscription: $((Get-AzContext).Subscription.Name)"
 #--------------------------------------------------------------------
 if ($Cleanup) {
     if (Get-AzResourceGroup -Name $ResourceGroup -ErrorAction SilentlyContinue) {
-        if ($PSCmdlet.ShouldProcess($ResourceGroup, "Delete resource group and ALL resources")) {
+        if ($PSCmdlet.ShouldProcess($ResourceGroup, "Delete resource group and ALL resources (including VMs)")) {
             Write-Host "Deleting $ResourceGroup ..."
             Remove-AzResourceGroup -Name $ResourceGroup -Force | Out-Null
             Write-Host "Done."
@@ -102,22 +94,22 @@ if ($Cleanup) {
     return
 }
 
-if (-not $VmAdminPassword) {
-    throw "VmAdminPassword is required for deployment. Use Read-Host -AsSecureString."
-}
-
 #--------------------------------------------------------------------
-# Naming
+# Naming + standard tags (CAF + DIA tagging standard, see step-1-foundations.md)
 #--------------------------------------------------------------------
 $suffix    = -join ((48..57) + (97..122) | Get-Random -Count 4 | ForEach-Object {[char]$_})
 $staName   = "stdialabs$suffix"
 $lawName   = "law-dia-labs"
 $aiName    = "appi-dia-labs"
 $rsvName   = "rsv-dia-labs"
-$vnetName  = "vnet-dia-labs"
-$rhelVm    = "vm-rhel-lab"
-$winVm     = "vm-win-lab"
-$tags      = @{ owner = "preservation-team"; project = "dia-azure-labs"; env = "training" }
+$tags      = @{
+    app_name    = "anl"
+    org_name    = "dia"
+    cost_centre = "training"
+    env         = "trn"
+    owner       = (Get-AzContext).Account.Id
+    severity    = "low"
+}
 
 #--------------------------------------------------------------------
 # Resource group
@@ -174,68 +166,6 @@ if (-not $rsv) {
 }
 
 #--------------------------------------------------------------------
-# Virtual network + subnet
-#--------------------------------------------------------------------
-Write-Host "Ensuring VNet $vnetName ..."
-$vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroup -Name $vnetName -ErrorAction SilentlyContinue
-if (-not $vnet) {
-    $sn = New-AzVirtualNetworkSubnetConfig -Name "snet-vms" -AddressPrefix "10.42.1.0/24"
-    $vnet = New-AzVirtualNetwork -ResourceGroupName $ResourceGroup -Name $vnetName `
-        -Location $Location -AddressPrefix "10.42.0.0/16" -Subnet $sn -Tag $tags
-}
-$subnetId = ($vnet.Subnets | Where-Object Name -eq "snet-vms").Id
-
-#--------------------------------------------------------------------
-# Helper: deploy a VM with AMA
-#--------------------------------------------------------------------
-function New-LabVm {
-    param(
-        [string]$Name,
-        [string]$Image,           # e.g. RedHat:RHEL:9-lvm-gen2:latest or MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest
-        [string]$OsType           # Linux | Windows
-    )
-    $existing = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -ErrorAction SilentlyContinue
-    if ($existing) {
-        Write-Host "VM $Name exists; skipping create."
-        return $existing
-    }
-    Write-Host "Creating VM $Name ($OsType) ..."
-
-    $cred = New-Object System.Management.Automation.PSCredential ($VmAdminUser, $VmAdminPassword)
-    $nicName = "$Name-nic"
-    $nic = New-AzNetworkInterface -ResourceGroupName $ResourceGroup -Name $nicName `
-        -Location $Location -SubnetId $subnetId -Tag $tags
-
-    $vmCfg = New-AzVMConfig -VMName $Name -VMSize "Standard_B2s"
-    if ($OsType -eq "Linux") {
-        $vmCfg = Set-AzVMOperatingSystem -VM $vmCfg -Linux -ComputerName $Name -Credential $cred
-    } else {
-        $vmCfg = Set-AzVMOperatingSystem -VM $vmCfg -Windows -ComputerName $Name -Credential $cred -ProvisionVMAgent -EnableAutoUpdate
-    }
-    $imgParts = $Image -split ":"
-    $vmCfg = Set-AzVMSourceImage -VM $vmCfg `
-        -PublisherName $imgParts[0] -Offer $imgParts[1] -Skus $imgParts[2] -Version $imgParts[3]
-    $vmCfg = Add-AzVMNetworkInterface -VM $vmCfg -Id $nic.Id
-    $vmCfg = Set-AzVMOSDisk -VM $vmCfg -Name "$Name-osdisk" -CreateOption FromImage -StorageAccountType "StandardSSD_LRS"
-    $vmCfg = Set-AzVMBootDiagnostic -VM $vmCfg -Disable
-
-    New-AzVM -ResourceGroupName $ResourceGroup -Location $Location -VM $vmCfg -Tag $tags | Out-Null
-
-    # Attach Azure Monitor Agent and bind to LAW via DCR
-    $extName = if ($OsType -eq "Linux") { "AzureMonitorLinuxAgent" } else { "AzureMonitorWindowsAgent" }
-    $publisher = "Microsoft.Azure.Monitor"
-    Write-Host "  Installing $extName on $Name ..."
-    Set-AzVMExtension -ResourceGroupName $ResourceGroup -VMName $Name `
-        -Name $extName -Publisher $publisher -ExtensionType $extName `
-        -TypeHandlerVersion "1.0" -EnableAutomaticUpgrade $true | Out-Null
-
-    return Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name
-}
-
-$vmRhel = New-LabVm -Name $rhelVm -Image "RedHat:RHEL:9-lvm-gen2:latest"                                            -OsType Linux
-$vmWin  = New-LabVm -Name $winVm  -Image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" -OsType Windows
-
-#--------------------------------------------------------------------
 # Output JSON
 #--------------------------------------------------------------------
 $out = [ordered]@{
@@ -246,16 +176,20 @@ $out = [ordered]@{
     AppInsights           = @{ Name = $ai.Name;  Id = $ai.Id }
     StorageAccount        = @{ Name = $sta.StorageAccountName; Id = $sta.Id }
     RecoveryVault         = @{ Name = $rsv.Name; Id = $rsv.ID }
-    Vms                   = @{ Rhel = $vmRhel.Name; Windows = $vmWin.Name }
     Tags                  = $tags
     GeneratedAt           = (Get-Date).ToString("o")
+    Note                  = "VMs are NOT included. Run deploy-vms.ps1 if you want them."
 }
 $outFile = Join-Path -Path (Get-Location) -ChildPath "lab-output.json"
 $out | ConvertTo-Json -Depth 6 | Out-File -FilePath $outFile -Encoding utf8
 
 Write-Host ""
 Write-Host "========================================"
-Write-Host " Lab deployed."
+Write-Host " Core lab deployed (no VMs)."
 Write-Host " Output written to: $outFile"
-Write-Host " Send that file to Shanshan."
+Write-Host ""
+Write-Host " Next steps:"
+Write-Host "   - For VM-based labs (Step 2 AMA / heartbeat, optional Backup lab),"
+Write-Host "     run: ./deploy-vms.ps1 -SubscriptionId $SubscriptionId"
+Write-Host "   - Send lab-output.json to Shanshan."
 Write-Host "========================================"

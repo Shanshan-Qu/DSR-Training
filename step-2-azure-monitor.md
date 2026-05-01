@@ -50,7 +50,10 @@ The relationship in plain English:
 
 ---
 
-## ⌨️ Activity 1: Verify AMA is working
+## ⌨️ Activity 1: Verify AMA is working _(optional — requires the VM tier)_
+
+> [!NOTE]
+> Skip this activity if you didn't run `deploy-vms.ps1`. It needs the two lab VMs and their AMA extension. See [step-optional-vm-setup.md](step-optional-vm-setup.md) for the one-off VM setup. Activities 2–5 below do **not** depend on VMs.
 
 1. Portal → `vm-rhel-lab` → **Settings → Extensions + applications**.
 2. Confirm `AzureMonitorLinuxAgent` is **Provisioning succeeded**.
@@ -113,9 +116,12 @@ Wait ~5 minutes for the logs to land.
 
 ---
 
-## ⌨️ Activity 4: Create an alert rule + action group
+## ⌨️ Activity 4: Create an alert rule + action group _(VM-based version is optional)_
 
 We'll build a simple alert: **"Email the team if any VM stops sending heartbeats for 10 minutes."**
+
+> [!NOTE]
+> The `Heartbeat` query below requires VMs. If you didn't run `deploy-vms.ps1`, build the alert against `StorageBlobLogs` instead (e.g. delete-spike alert from the bonus task at the bottom of this lab) — the action-group walkthrough is identical.
 
 1. Portal → `la-dia-labs` → **Alerts → + Create → Alert rule**.
 2. **Scope**: confirm it's the workspace.
@@ -208,11 +214,11 @@ Hint: the metric is on the storage account itself (Metrics blade), or you can wr
 
 ## ✅ Success checklist
 
-- [ ] Both VMs return `Heartbeat` rows in the last 5 minutes
+- [ ] _Optional:_ Both VMs return `Heartbeat` rows in the last 5 minutes (skip if no VM tier)
 - [ ] Storage diagnostic settings for **blob** are sending to `la-dia-labs`
 - [ ] You ran a blob upload + delete and saw rows appear in `StorageBlobLogs` after a few minutes
 - [ ] `ag-preservation-oncall` action group exists with your email as a recipient
-- [ ] `alert-vm-heartbeat-missing` alert rule is created and **enabled**
+- [ ] An alert rule is created and **enabled** (heartbeat-missing if you have VMs, blob-delete-spike otherwise)
 - [ ] You've created the bonus "mass delete" alert
 - [ ] You've explored the built-in VM, Storage, and Backup workbooks in the gallery
 - [ ] You've built and saved the custom `Preservation Storage Activity` workbook with blob operations chart and delete-spike chart

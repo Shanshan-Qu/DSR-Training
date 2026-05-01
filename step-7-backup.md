@@ -6,6 +6,8 @@ _The "if all else fails" lab._ 🛟 RSV configuration, vault hardening, and back
 > Time: ~60 minutes.
 > Pairs with **Module 7 (optional)** of the training plan v3.
 >
+> **Pre-requisite:** the lab VMs from [step-optional-vm-setup.md](step-optional-vm-setup.md) must be deployed (`deploy-vms.ps1`). This lab backs up `vm-rhel-lab`. The core `deploy-lab.ps1` script does NOT create VMs.
+>
 > **💰 Lab cost:** ~NZD $2 if you run a single on-demand backup of `vm-rhel-lab` and remove it within 24 h. Vault storage is billed per GB/month of recovery-point data; first backup of a small VM is < $0.20 of storage + < $0.05 of restore traffic. **Disable backup on the protected item before tearing the lab down**, otherwise the recovery points keep accruing storage cost for the policy retention window (default 30 days).
 
 ---

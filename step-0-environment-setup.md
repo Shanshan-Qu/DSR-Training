@@ -22,12 +22,18 @@ rg-dia-azure-labs/
 │   ├── container: rosetta-objects   (Hot)
 │   └── container: rosetta-archive   (Cool — lifecycle target)
 ├── Recovery Services vault          (rsv-dia-labs)
-├── VM: vm-rhel-lab                  (Linux, Standard_B2s)
-├── VM: vm-win-lab                   (Windows, Standard_B2s)
-└── Tags: env=lab, owner=preservation-team, costcentre=archives
+└── Tags: app_name=anl, org_name=dia, env=trn, owner=<you>, severity=low, cost_centre=training
 ```
 
-Both VMs have the **Azure Monitor Agent (AMA)** installed and are linked to the Log Analytics workspace, so data flows from minute one.
+> [!NOTE]
+> **VMs are NOT created by the core deployment script** — they are optional and live in a separate `deploy-vms.ps1`.
+>
+> Add the VM tier (1 RHEL 9 + 1 Windows Server 2022, both with the **Azure Monitor Agent (AMA)** + a **Data Collection Rule**) only if you plan to do:
+> - Step 2 — "Verify AMA is working" + the heartbeat alert
+> - Step 3 — KQL queries against `Heartbeat`, `Perf`, `Syslog`, `Event`
+> - Step 7 — Backup & Recovery Services vault (optional self-study)
+>
+> All other labs (Storage, KQL against `StorageBlobLogs`, Cost, Reporting, Governance, Portal, Nonprod review) work **without** VMs. See [step-optional-vm-setup.md](step-optional-vm-setup.md) for the VM tier instructions.
 
 ---
 
@@ -55,8 +61,6 @@ param(
   [string]$SubscriptionId,
   [string]$ResourceGroup = "rg-dia-azure-labs",
   [string]$Location      = "australiaeast",
-  [string]$VmAdminUser   = "labadmin",
-  [securestring]$VmAdminPassword,
   [switch]$Cleanup
 )
 ```
@@ -75,22 +79,29 @@ Connect-AzAccount
 # 2. Confirm you're on the right subscription
 Get-AzContext
 
-# 3. Run the deployment (will prompt for a VM admin password)
+# 3. Run the core deployment (no VMs are created)
 ./deploy-lab.ps1 -SubscriptionId "<your-sub-guid>"
 ```
 
-Expect ~12–18 minutes. The script writes progress as it goes:
+Expect ~3–5 minutes. The script writes progress as it goes:
 
 ```
 [10:32] Creating resource group rg-dia-azure-labs in australiaeast ... done
-[10:33] Creating Log Analytics workspace la-dia-labs ... done
-[10:34] Creating storage account stdialabs7421 ... done
-[10:35] Creating Recovery Services vault rsv-dia-labs ... done
-[10:36] Creating Linux VM vm-rhel-lab ... (this takes a while)
-[10:42] Creating Windows VM vm-win-lab ...
-[10:48] Installing Azure Monitor Agent on both VMs ...
-[10:51] Writing lab-output.json
-Done. Lab is ready.
+[10:33] Ensuring Log Analytics workspace law-dia-labs ... done
+[10:34] Ensuring Application Insights appi-dia-labs ... done
+[10:34] Ensuring storage account stdialabs7421 ... done
+[10:35] Ensuring Recovery Services vault rsv-dia-labs ... done
+[10:35] Writing lab-output.json
+Core lab deployed (no VMs).
+```
+
+### Optional: add VMs
+
+If you also want the VM tier (only needed for Step 2 AMA activities, Step 3 KQL on Heartbeat/Perf, and the optional Step 7 Backup lab), run the **separate** VM script after this one finishes. Full instructions in [step-optional-vm-setup.md](step-optional-vm-setup.md):
+
+```powershell
+$pw = Read-Host -AsSecureString "Lab VM admin password"
+./deploy-vms.ps1 -SubscriptionId "<your-sub-guid>" -VmAdminPassword $pw
 ```
 
 ---
@@ -113,17 +124,17 @@ Email it to **shanshanqu@microsoft.com** with subject `DIA Lab Ready - <your-nam
 Confirm the lab is healthy by clicking through the portal:
 
 1. Go to **Resource groups → rg-dia-azure-labs**.
-2. You should see ~12 resources (VMs, NICs, disks, vault, workspace, storage, etc.).
-3. Open `vm-rhel-lab` → **Monitoring → Insights**. Within 15 minutes you should see CPU and memory charts.
-4. Open `la-dia-labs` → **Logs**. Run `Heartbeat | take 10` — you should get rows back from both VMs.
+2. You should see ~5 resources without VMs (workspace, App Insights, storage account, vault, plus the auto-created storage for App Insights). If you also ran `deploy-vms.ps1` you'll see ~10 more (VNet, NICs, OS disks, VMs, DCR).
+3. Open `la-dia-labs` → **Logs**. Run `AzureActivity | take 10` — you should get rows from the deployment itself.
+4. _If you deployed VMs:_ Run `Heartbeat | take 10` — you should get rows from both VMs within ~10 minutes of `deploy-vms.ps1` finishing.
 
 ---
 
 ## ✅ Success checklist
 
-- [ ] `rg-dia-azure-labs` exists and contains the resources listed above
-- [ ] Both VMs report **Running**
-- [ ] Log Analytics returns Heartbeat rows for both VMs
+- [ ] `rg-dia-azure-labs` exists and contains: workspace, App Insights, storage account, RSV
+- [ ] Log Analytics returns rows from `AzureActivity | take 10`
+- [ ] _Optional:_ if you ran `deploy-vms.ps1`, both VMs report **Running** and `Heartbeat | take 10` returns rows
 - [ ] Storage account has the two containers `rosetta-objects` and `rosetta-archive`
 - [ ] Recovery Services vault is created and empty (no backup items yet)
 - [ ] You've emailed `lab-output.json` to Shanshan

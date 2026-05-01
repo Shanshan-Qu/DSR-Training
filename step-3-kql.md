@@ -40,7 +40,10 @@ Three rules to keep you fast and cheap:
 
 ---
 
-## 📚 Must-know query #1 — "Is everything up?"
+## 📚 Must-know query #1 — "Is everything up?" _(optional — needs the VM tier)_
+
+> [!NOTE]
+> `Heartbeat` and `Perf` only contain rows if you ran [step-optional-vm-setup.md](step-optional-vm-setup.md). If you skipped the VM tier, read these two queries for the syntax patterns and jump to query #3 — the rest of this lab uses `StorageBlobLogs`, `AzureActivity`, and `AzureDiagnostics`, none of which need VMs.
 
 ```kql
 Heartbeat

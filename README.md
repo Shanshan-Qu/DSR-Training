@@ -27,21 +27,22 @@ Format inspired by the [GitHub Skills](https://github.com/skills/customize-your-
 
 | Step | Title | Lab time | Pairs with module | Est. lab cost (NZD) |
 |-----:|-------|---------:|-------------------|--------------------:|
-| **0** | [Environment setup](step-0-environment-setup.md) | 30 min | (run before Module 1) | ~$5 / day while VMs run |
+| **0** | [Environment setup](step-0-environment-setup.md) | 30 min | (run before Module 1) | $0 (no VMs by default) |
+| **0b** | [Optional VM setup & monitoring](step-optional-vm-setup.md) **— OPTIONAL** | 30 min | (only if doing Step 2 AMA / Step 3 KQL on Heartbeat / Step 7 Backup) | ~$5 / day while VMs run |
 | **1** | [Azure foundations & orientation](step-1-foundations.md) | 30 min | Module 1 | $0 (read-only portal) |
 | **2** | [Azure Monitor fundamentals](step-2-azure-monitor.md) | 90 min | Module 2 | < $1 (LAW ingest) |
 | **3** | [Must-know KQL](step-3-kql.md) | 90 min | Module 3 | < $1 (LAW queries) |
 | **4** | [Cost Management & FinOps](step-4-cost-management.md) | 60 min | Module 4 | $0 (Cost Mgmt is free) |
 | **5** | [Storage for preservation](step-5-storage.md) | 120 min | Module 5 | ~$2 (storage + transactions) |
 | **6** | [Terraform on Azure (read-only)](step-6-terraform.md) | 60 min | Module 6 | $0 (no resource changes) |
-| **7** | [Backup & Recovery Services vault](step-7-backup.md) **— OPTIONAL** | 60 min | Module 7 (optional) | ~$2 (vault storage + restore) |
+| **7** | [Backup & Recovery Services vault](step-7-backup.md) **— OPTIONAL** | 60 min | Module 7 (optional) | ~$2 (vault storage + restore; **requires Step 0b**) |
 | **8** | [Guardrails & Governance](step-8-governance.md) | 90 min | Module 8 | $0 |
 | **9** | [Azure portal foundations](step-9-portal.md) | 60 min | Module 9 | $0 |
 | **10** | [Nonprod environment review](step-10-nonprod-review.md) | 90 min | Module 10 | $0 (read-only review) |
 | **11** | [Operational reporting & dashboards](step-11-reporting.md) **— NEW** | 90 min | Module 11 (new) | < $1 |
 
 > [!TIP]
-> **Total Azure cost across all 11 labs is under NZD $30** if you run them within a 1–2 week window and **delete the lab resource group when you finish** (`./assets/deploy-lab.ps1 -Cleanup`). The single biggest cost is the two B2s VMs left running — at roughly $0.10/hr each. Stop them between sessions to keep cost minimal.
+> **VMs are now opt-in.** The core `deploy-lab.ps1` no longer creates VMs — they live in a separate `deploy-vms.ps1`. If you skip Step 0b, the entire training series costs **under NZD $5**. With VMs included (Step 0b run, both VMs running for the full series), expect **under NZD $30** — stop the VMs in the portal between sessions and run `deploy-vms.ps1 -Cleanup` (or `deploy-lab.ps1 -Cleanup` for everything) at the end.
 
 ---
 
@@ -211,10 +212,11 @@ Builds the report set Emma asked for: storage cost & 12-month forecast, data-mov
 ## 🚀 How to start
 
 1. Open [Step 0 — Environment setup](step-0-environment-setup.md).
-2. Run the provided PowerShell script `assets/deploy-lab.ps1` against your training subscription. It creates everything the labs need.
-3. When the script finishes, work through the steps in order. Each step ends with a **Next step** link.
-4. Slides and recordings from the live training sessions live in our DIA Teams channel — see the training plan for the link.
-5. **Stop the lab VMs between sessions** and **run `deploy-lab.ps1 -Cleanup` when finished** to keep cost under NZD $30 total.
+2. Run `assets/deploy-lab.ps1` against your training subscription. It creates the core lab (workspace, storage, RSV) — **no VMs**.
+3. _If you need VMs_ for Step 2 AMA activities, Step 3 KQL on Heartbeat/Perf, or the optional Step 7 Backup lab — run [Step 0b — Optional VM setup & monitoring](step-optional-vm-setup.md) which uses `assets/deploy-vms.ps1`. Otherwise skip it.
+4. Work through the steps in order. Each step ends with a **Next step** link.
+5. Slides and recordings from the live training sessions live in our DIA Teams channel — see the training plan for the link.
+6. **If you ran the VM tier:** stop the VMs between sessions, and run `deploy-vms.ps1 -Cleanup` (or `deploy-lab.ps1 -Cleanup` for everything) when finished.
 
 ---
 
@@ -224,20 +226,22 @@ Builds the report set Emma asked for: storage cost & 12-month forecast, data-mov
 DSR-Training/  (repo root)
 ├── README.md                       ← you are here
 ├── .gitignore                      ← excludes local-docs/ and loose docx/pdf
-├── step-0-environment-setup.md     ← deploy the lab
+├── step-0-environment-setup.md     ← deploy the core lab (no VMs)
+├── step-optional-vm-setup.md       ← OPTIONAL VM tier + AMA + DCR
 ├── step-1-foundations.md
 ├── step-2-azure-monitor.md
 ├── step-3-kql.md
 ├── step-4-cost-management.md
 ├── step-5-storage.md
 ├── step-6-terraform.md
-├── step-7-backup.md                ← OPTIONAL (RSV owned by Core Support)
+├── step-7-backup.md                ← OPTIONAL (RSV owned by Core Support; needs Step 0b VMs)
 ├── step-8-governance.md
 ├── step-9-portal.md
 ├── step-10-nonprod-review.md       ← vendor handover checklist
 ├── step-11-reporting.md            ← NEW: dashboards, workbooks, scheduled reports
 ├── assets/
-│   ├── deploy-lab.ps1
+│   ├── deploy-lab.ps1               ← core lab (workspace + storage + RSV; NO VMs)
+│   ├── deploy-vms.ps1               ← OPTIONAL VM tier (1 RHEL + 1 Windows + AMA + DCR)
 │   ├── deploy-demo-env.ps1
 │   └── kql-cheatsheet.md
 └── local-docs/                     ← (git-ignored) source design docs, drafts, working scripts
