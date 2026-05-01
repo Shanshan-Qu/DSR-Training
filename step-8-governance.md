@@ -4,7 +4,9 @@ _What stops you from doing the wrong thing — and what you're expected to polic
 
 > [!NOTE]
 > Time: ~90 minutes.
-> Pairs with **Module 8** of the training plan.
+> Pairs with **Module 8** of the training plan v3.
+>
+> **💰 Lab cost:** $0 — Azure Policy, RBAC, PIM viewing, and access reviews are billed under Entra ID licensing (already in place at DIA). No Azure resource cost incurred.
 
 ---
 
@@ -146,4 +148,4 @@ Share the doc with Shanshan and Emma.
 
 ---
 
-➡️ **Next step:** [Step 9 — Azure portal foundations](./step-9-portal.md)
+➡️ **Next step:** [Step 9 — Azure portal foundations](step-9-portal.md)

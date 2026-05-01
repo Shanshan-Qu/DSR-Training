@@ -4,8 +4,10 @@ _The infrastructure is code._ 🧱 You won't be writing a lot of Terraform day-t
 
 > [!NOTE]
 > Time: ~60 minutes.
-> Pairs with **Module 6** of the training plan.
+> Pairs with **Module 6** of the training plan v3.
 > **Pre-req self-paced reading**: [Terraform on Azure](https://learn.microsoft.com/en-us/azure/developer/terraform/) and [HashiCorp – Terraform fundamentals](https://developer.hashicorp.com/terraform/tutorials/azure-get-started). Do these *before* the live session.
+>
+> **💰 Lab cost:** $0 — read-only inspection of Terraform plan output. No `terraform apply`.
 
 ---
 
@@ -191,4 +193,4 @@ Bring your findings to the live session — we'll walk through them together.
 
 ---
 
-➡️ **Next step:** [Step 7 — Backup & Recovery Services vault](./step-7-backup.md)
+➡️ **Next step:** [Step 8 — Guardrails & Governance](step-8-governance.md) — (Step 7 Backup is **optional** — see [step-7-backup.md](step-7-backup.md) for self-study)

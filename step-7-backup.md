@@ -1,10 +1,12 @@
-# Step 7 — Backup & Recovery Services vault
+# Step 7 — Backup & Recovery Services vault — **OPTIONAL**
 
-_The "if all else fails" lab._ 🛟 You confirmed in Module 7 that the Recovery Services vault (RSV) is the right pattern for Rosetta. This lab makes you comfortable with the operational tasks: configure a policy, run an on-demand backup, restore a file, and read Backup Center reports.
+_The "if all else fails" lab._ 🛟 RSV configuration, vault hardening, and backup-policy authoring at DIA is **owned by Core Support / Datacom**, not the Digital Preservation Team. This lab is therefore **optional / self-study**. Run it any time on the lab subscription if you want hands-on familiarity for restore drills, or if the responsibility split changes.
 
 > [!NOTE]
 > Time: ~60 minutes.
-> Pairs with **Module 7** of the training plan.
+> Pairs with **Module 7 (optional)** of the training plan v3.
+>
+> **💰 Lab cost:** ~NZD $2 if you run a single on-demand backup of `vm-rhel-lab` and remove it within 24 h. Vault storage is billed per GB/month of recovery-point data; first backup of a small VM is < $0.20 of storage + < $0.05 of restore traffic. **Disable backup on the protected item before tearing the lab down**, otherwise the recovery points keep accruing storage cost for the policy retention window (default 30 days).
 
 ---
 
@@ -139,4 +141,4 @@ Hint: Backup Center's **Reports** view answers most of these without leaving one
 
 ---
 
-➡️ **Next step:** [Step 8 — Guardrails & Governance](./step-8-governance.md)
+➡️ **Continue with:** [Step 8 — Guardrails & Governance](step-8-governance.md)

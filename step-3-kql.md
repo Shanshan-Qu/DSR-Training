@@ -4,7 +4,9 @@ _Time to ask the workspace questions._ 🔍 KQL (Kusto Query Language) is what y
 
 > [!NOTE]
 > Time: ~90 minutes.
-> Pairs with **Module 3** of the training plan.
+> Pairs with **Module 3** of the training plan v3.
+>
+> **💰 Lab cost:** under NZD $1. KQL queries against Log Analytics are billed only on data scanned beyond the included free quota — lab volume is well below the threshold.
 
 ---
 

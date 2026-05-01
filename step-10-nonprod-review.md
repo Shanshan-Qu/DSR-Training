@@ -4,8 +4,10 @@ _Now it's real._ 🔍 The vendor has deployed the Digital Storage and Resilience
 
 > [!NOTE]
 > Time: ~90 minutes.
-> Pairs with **Module 10** of the training plan.
+> Pairs with **Module 10** of the training plan v3.
 > **Pre-req:** Steps 1–9 completed. You need at least Reader access to the DSR nonprod subscription (`sub-dia-dsr-uat` or equivalent).
+>
+> **💰 Lab cost:** $0 — read-only walkthrough of the nonprod environment using the demo deployment. No write operations performed.
 
 ---
 
@@ -303,4 +305,6 @@ This document becomes the formal acceptance sign-off for the nonprod handover.
 
 ---
 
-➡️ **Back to start:** [README](./README.md)
+➡️ **Next step:** [Step 11 — Operational reporting & dashboards](step-11-reporting.md)
+
+⬅️ **Back to start:** [README](README.md)

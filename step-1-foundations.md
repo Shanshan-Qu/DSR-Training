@@ -4,7 +4,9 @@ _Welcome to the first lab!_ 🎉 This one is short — it's a guided walk-throug
 
 > [!NOTE]
 > Time: ~30 minutes.
-> Pairs with **Module 1** of the training plan.
+> Pairs with **Module 1** of the training plan v3.
+>
+> **💰 Lab cost:** $0 — read-only portal navigation only.
 
 ---
 

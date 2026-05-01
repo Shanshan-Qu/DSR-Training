@@ -4,7 +4,9 @@ _Tying it all together._ 🧰 You've used the portal in nearly every previous st
 
 > [!NOTE]
 > Time: ~60 minutes.
-> Pairs with **Module 9** of the training plan.
+> Pairs with **Module 9** of the training plan v3.
+>
+> **💰 Lab cost:** $0 — portal navigation, dashboards, Resource Graph, and Cloud Shell are free. Cloud Shell uses a tiny File Share for `$HOME` (a few cents/month if you keep it).
 
 ---
 
@@ -181,4 +183,6 @@ Welcome to running cloud workloads at DIA. 🛡️
 
 ---
 
-⬅️ **Back to:** [Lab index](./README.md)
+➡️ **Next step:** [Step 10 — Nonprod environment review](step-10-nonprod-review.md)
+
+⬅️ **Back to:** [Lab index](README.md)

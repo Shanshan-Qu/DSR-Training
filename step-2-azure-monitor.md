@@ -4,7 +4,9 @@ _Let's plug in the dashboard lights._ 💡 Azure Monitor is what tells you **whe
 
 > [!NOTE]
 > Time: ~90 minutes.
-> Pairs with **Module 2** of the training plan.
+> Pairs with **Module 2** of the training plan v3.
+>
+> **💰 Lab cost:** under NZD $1. Log Analytics ingestion is metered per GB; the lab generates a few MB. Alert rules are billed per evaluation but the lab uses the free tier (≤ 10 rules).
 
 ---
 

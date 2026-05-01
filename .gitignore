@@ -1,3 +1,9 @@
-# Exclude local documents from being pushed to GitHub
+# Local-only working documents (source design docs, drafts, helper scripts)
+# Not pushed to GitHub.
+local-docs/
+
+# Defensive: keep loose docx/pdf/helper scripts out of the repo if anyone drops them at root.
 *.docx
 *.pdf
+fix-*.ps1
+

@@ -4,7 +4,9 @@ _The big one._ 🗄️ This is the lab that maps most directly to your day-to-da
 
 > [!NOTE]
 > Time: ~120 minutes.
-> Pairs with **Module 5** of the training plan.
+> Pairs with **Module 5** of the training plan v3.
+>
+> **💰 Lab cost:** ~NZD $2. A few MB of test blobs across Hot/Cool tiers, plus blob-operation transactions and change-feed storage. Lifecycle tier-change events are billed at 1 transaction per blob moved (negligible at lab volume).
 
 ---
 

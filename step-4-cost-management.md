@@ -4,7 +4,9 @@ _Money in, money out._ 💰 The team's existing tier-management script already h
 
 > [!NOTE]
 > Time: ~60 minutes.
-> Pairs with **Module 4** of the training plan.
+> Pairs with **Module 4** of the training plan v3.
+>
+> **💰 Lab cost:** $0 — Cost Management + Billing, Cost analysis views, budgets, and Reservation/Savings Plan recommendations are **free**.
 
 ---
 

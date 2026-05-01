@@ -5,6 +5,8 @@ _Welcome!_ 👋 Before any of the live training sessions, we deploy a small **la
 > [!NOTE]
 > Time: ~30 minutes (mostly waiting for Azure to provision resources).
 > You only need to do this **once** for the whole training series.
+>
+> **💰 Lab cost:** ~NZD $5 / day while the two B2s VMs are running. **Stop both VMs between sessions** (portal → VM → Stop) to drop cost to ~$0.30/day (storage only). Run `deploy-lab.ps1 -Cleanup` at the end of the series to delete everything. Total cost across the whole series stays under NZD $30 if you stop VMs between sessions.
 
 ---
 
